@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+pandas
+nltk
+textblob
+requests
+streamlit

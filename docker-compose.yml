@@ -1,0 +1,74 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: crypto_postgres_1
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  market_data:
+    build:
+      context: ./services/market_data-service
+      dockerfile: Dockerfile
+    container_name: market_data_service
+    restart: unless-stopped
+    environment:
+      DB_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      - postgres
+    ports:
+      - "8001:8001"
+
+  onchain:
+    build:
+      context: ./services/onchain-service
+      dockerfile: Dockerfile
+    container_name: onchain_service
+    restart: unless-stopped
+    environment:
+      DB_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      - postgres
+    ports:
+      - "8002:8002"
+
+  sentiment:
+    build:
+      context: ./services/sentiment-service
+      dockerfile: Dockerfile
+    container_name: sentiment_service
+    restart: unless-stopped
+    environment:
+      DB_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      - postgres
+    ports:
+      - "8003:8003"
+
+  streamlit_app:
+    build:
+      context: ./streamlit_app
+      dockerfile: Dockerfile
+    container_name: streamlit_dashboard
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - market_data
+      - onchain
+      - sentiment
+    environment:
+      DB_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    ports:
+      - "8501:8501"
+
+volumes:
+  postgres_data:

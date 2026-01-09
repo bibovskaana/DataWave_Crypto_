@@ -1,0 +1,10 @@
+streamlit
+pandas
+numpy
+sqlalchemy
+psycopg2-binary
+requests
+torch
+scikit-learn
+ta
+nltk
